@@ -38,34 +38,27 @@ const io = new Server(server, {
 // =========================
 
 io.use((socket, next) => {
-  console.log("=== NEW CONNECTION ATTEMPT ===");
-  console.log("Socket ID:", socket.id);
-  console.log("Handshake auth:", JSON.stringify(socket.handshake.auth));
-  console.log("Handshake headers:", JSON.stringify(socket.handshake.headers));
-  console.log("Handshake query:", JSON.stringify(socket.handshake.query));
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  const userAgent = socket.handshake.headers["user-agent"] || "";
 
-  const token = socket.handshake.auth?.token;
-
-  if (!token) {
-    console.log("❌ REJECTED: No token provided");
-    return next(new Error("No token provided"));
+  // Reject browser connections immediately
+  if (!token && userAgent.includes("Mozilla")) {
+    console.log("🚫 Browser connection rejected");
+    return next(new Error("Browser connections not allowed"));
   }
 
-  console.log("Token received:", token.substring(0, 10) + "...");
+  if (!token) return next(new Error("No token provided"));
 
   if (token === SOCKET_SECRET) {
     socket.role = "pc";
-    console.log("✅ ACCEPTED as PC");
     return next();
   }
 
   if (token === ADMIN_SECRET) {
     socket.role = "admin";
-    console.log("✅ ACCEPTED as ADMIN");
     return next();
   }
 
-  console.log("❌ REJECTED: Invalid token");
   return next(new Error("Unauthorized"));
 });
 
