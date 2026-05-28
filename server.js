@@ -22,20 +22,25 @@ app.use((req, res) => {
 
 const SOCKET_SECRET = process.env.SOCKET_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3002;
 
 if (!SOCKET_SECRET || !ADMIN_SECRET) {
   console.error("❌ Missing SOCKET_SECRET or ADMIN_SECRET in .env");
   process.exit(1);
 }
 
-// LOCK CORS (CHANGE THIS)
+// =========================
+// CORS
+// =========================
+
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
   allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 // =========================
@@ -46,34 +51,38 @@ io.use((socket, next) => {
   console.log("=== NEW CONNECTION ===");
   console.log("Socket ID:", socket.id);
 
-  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  const token =
+    socket.handshake.auth?.token ||
+    socket.handshake.query?.token ||
+    socket.handshake.headers["x-auth-token"];
   const userAgent = socket.handshake.headers["user-agent"] || "";
-  const isBrowser =
-    userAgent.includes("Mozilla") || userAgent.includes("Chrome");
 
-  // PC client (Electron/Node) with token
+  console.log("Token present:", !!token);
+  console.log("User-Agent:", userAgent.substring(0, 50) + "...");
+
+  // ✅ FIX: Check token FIRST, before checking user-agent
+  // PC client or Admin with valid token = always accept
   if (token === SOCKET_SECRET) {
     socket.role = "pc";
     console.log("✅ PC connected");
     return next();
   }
 
-  // Admin with token
   if (token === ADMIN_SECRET) {
     socket.role = "admin";
     console.log("✅ Admin connected");
     return next();
   }
 
-  // Browser without token = auto-reject (no error to client, just disconnect)
-  if (isBrowser) {
-    console.log("🚫 Browser rejected");
-    return next(new Error("Browser not allowed"));
+  // No token provided
+  if (!token) {
+    console.log("❌ No token provided");
+    return next(new Error("No token provided"));
   }
 
-  // Anything else without token
-  console.log("❌ No token");
-  return next(new Error("No token provided"));
+  // Invalid token
+  console.log("❌ Invalid token");
+  return next(new Error("Unauthorized"));
 });
 
 // =========================
@@ -317,7 +326,7 @@ io.on("connection", (socket) => {
 
 // =========================
 // START SERVER
-// ========================= 
+// =========================
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Secure server running on port ${PORT}`);
