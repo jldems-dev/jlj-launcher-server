@@ -9,7 +9,12 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-// app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public")));
+
+// ✅ SPA fallback - catch all routes
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // =========================
 // SECURITY CONFIG
