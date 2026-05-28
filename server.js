@@ -9,7 +9,7 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-app.use(express.static(path.join(__dirname, "public")));
+// app.use(express.static(path.join(__dirname, "public")));
 
 // =========================
 // SECURITY CONFIG
@@ -38,28 +38,37 @@ const io = new Server(server, {
 // =========================
 
 io.use((socket, next) => {
+  console.log("=== NEW CONNECTION ===");
+  console.log("Socket ID:", socket.id);
+
   const token = socket.handshake.auth?.token || socket.handshake.query?.token;
   const userAgent = socket.handshake.headers["user-agent"] || "";
+  const isBrowser =
+    userAgent.includes("Mozilla") || userAgent.includes("Chrome");
 
-  // Reject browser connections immediately
-  if (!token && userAgent.includes("Mozilla")) {
-    console.log("🚫 Browser connection rejected");
-    return next(new Error("Browser connections not allowed"));
-  }
-
-  if (!token) return next(new Error("No token provided"));
-
+  // PC client (Electron/Node) with token
   if (token === SOCKET_SECRET) {
     socket.role = "pc";
+    console.log("✅ PC connected");
     return next();
   }
 
+  // Admin with token
   if (token === ADMIN_SECRET) {
     socket.role = "admin";
+    console.log("✅ Admin connected");
     return next();
   }
 
-  return next(new Error("Unauthorized"));
+  // Browser without token = auto-reject (no error to client, just disconnect)
+  if (isBrowser) {
+    console.log("🚫 Browser rejected");
+    return next(new Error("Browser not allowed"));
+  }
+
+  // Anything else without token
+  console.log("❌ No token");
+  return next(new Error("No token provided"));
 });
 
 // =========================
