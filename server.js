@@ -27,32 +27,45 @@ if (!SOCKET_SECRET || !ADMIN_SECRET) {
 // LOCK CORS (CHANGE THIS)
 const io = new Server(server, {
   cors: {
-    origin: "*", // replace with your domain in production
+    origin: "*",
     methods: ["GET", "POST"],
   },
+  allowEIO3: true,
 });
 
 // =========================
 // SECURITY LAYER (AUTH)
 // =========================
 
-io.use((socket, next) => { 
-  console.log("HANDSHAKE HEADERS:", socket.handshake.headers);
-  console.log("HANDSHAKE AUTH:", socket.handshake.auth);
+io.use((socket, next) => {
+  console.log("=== NEW CONNECTION ATTEMPT ===");
+  console.log("Socket ID:", socket.id);
+  console.log("Handshake auth:", JSON.stringify(socket.handshake.auth));
+  console.log("Handshake headers:", JSON.stringify(socket.handshake.headers));
+  console.log("Handshake query:", JSON.stringify(socket.handshake.query));
+
   const token = socket.handshake.auth?.token;
 
-  if (!token) return next(new Error("No token provided"));
+  if (!token) {
+    console.log("❌ REJECTED: No token provided");
+    return next(new Error("No token provided"));
+  }
+
+  console.log("Token received:", token.substring(0, 10) + "...");
 
   if (token === SOCKET_SECRET) {
     socket.role = "pc";
+    console.log("✅ ACCEPTED as PC");
     return next();
   }
 
   if (token === ADMIN_SECRET) {
     socket.role = "admin";
+    console.log("✅ ACCEPTED as ADMIN");
     return next();
   }
 
+  console.log("❌ REJECTED: Invalid token");
   return next(new Error("Unauthorized"));
 });
 
@@ -108,6 +121,8 @@ let messageTemplates = loadTemplates();
 
 io.on("connection", (socket) => {
   console.log(`Client connected: ${socket.id} [${socket.role}]`);
+
+  socket.emit("session-approved");
 
   // =========================
   // REGISTER
