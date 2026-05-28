@@ -36,7 +36,9 @@ const io = new Server(server, {
 // SECURITY LAYER (AUTH)
 // =========================
 
-io.use((socket, next) => {
+io.use((socket, next) => { 
+  console.log("HANDSHAKE HEADERS:", socket.handshake.headers);
+  console.log("HANDSHAKE AUTH:", socket.handshake.auth);
   const token = socket.handshake.auth?.token;
 
   if (!token) return next(new Error("No token provided"));
@@ -296,5 +298,5 @@ io.on("connection", (socket) => {
 // ========================= 
 
 server.listen(PORT, "0.0.0.0", () => {
-  // console.log(`✅ Secure server running on port ${PORT}`);
+  console.log(`✅ Secure server running on port ${PORT}`);
 });
