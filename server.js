@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const http = require("http");
 const path = require("path");
@@ -9,22 +11,76 @@ const server = http.createServer(app);
 
 app.use(express.static(path.join(__dirname, "public")));
 
+// =========================
+// SECURITY CONFIG
+// =========================
+
+const SOCKET_SECRET = process.env.SOCKET_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const PORT = process.env.PORT;
+
+if (!SOCKET_SECRET || !ADMIN_SECRET) {
+  console.error("❌ Missing SOCKET_SECRET or ADMIN_SECRET in .env");
+  process.exit(1);
+}
+
+// LOCK CORS (CHANGE THIS)
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: "*", // replace with your domain in production
+    methods: ["GET", "POST"],
+  },
 });
+
+// =========================
+// SECURITY LAYER (AUTH)
+// =========================
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+
+  if (!token) return next(new Error("No token provided"));
+
+  if (token === SOCKET_SECRET) {
+    socket.role = "pc";
+    return next();
+  }
+
+  if (token === ADMIN_SECRET) {
+    socket.role = "admin";
+    return next();
+  }
+
+  return next(new Error("Unauthorized"));
+});
+
+// =========================
+// RATE LIMITING
+// =========================
+
+const rateLimit = new Map();
+
+function checkRate(socket) {
+  const now = Date.now();
+  const last = rateLimit.get(socket.id) || 0;
+
+  if (now - last < 300) return false;
+
+  rateLimit.set(socket.id, now);
+  return true;
+}
+
+// =========================
+// DATA STORAGE
+// =========================
 
 const pcs = {};
 const TEMPLATES_FILE = path.join(__dirname, "templates.json");
 
-// =========================
-// TEMPLATE FILE OPERATIONS
-// =========================
-
 function loadTemplates() {
   try {
     if (fs.existsSync(TEMPLATES_FILE)) {
-      const data = fs.readFileSync(TEMPLATES_FILE, "utf8");
-      return JSON.parse(data);
+      return JSON.parse(fs.readFileSync(TEMPLATES_FILE, "utf8"));
     }
   } catch (err) {
     console.error("Error loading templates:", err);
@@ -42,18 +98,29 @@ function saveTemplates(templates) {
   }
 }
 
-// Load templates on startup
 let messageTemplates = loadTemplates();
 
-io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
+// =========================
+// SOCKET CONNECTION
+// =========================
 
-  socket.on("register-client", (data) => { 
-    if (data.type === "admin") {
+io.on("connection", (socket) => {
+  console.log(`Client connected: ${socket.id} [${socket.role}]`);
+
+  // =========================
+  // REGISTER
+  // =========================
+
+  socket.on("register-client", (data) => {
+    if (!checkRate(socket)) return;
+
+    if (socket.role === "admin") {
       socket.emit("templates-update", messageTemplates);
       socket.emit("pcs-update", pcs);
-    } else if (data.type === "pc") {
-      console.log(`PC registered: ${data.pcId}`);
+      return;
+    }
+
+    if (socket.role === "pc") {
       pcs[data.pcId] = {
         ...pcs[data.pcId],
         pcId: data.pcId,
@@ -61,378 +128,173 @@ io.on("connection", (socket) => {
         online: true,
         lastSeen: Date.now(),
       };
+
       io.emit("pcs-update", pcs);
     }
   });
 
   // =========================
-  // TEMPLATE CRUD OPERATIONS
+  // TEMPLATE CRUD (ADMIN ONLY)
   // =========================
 
-  // GET - Send current templates to admin
-  socket.on("get-templates", () => {
-    socket.emit("templates-update", messageTemplates);
-  });
-
-  // CREATE / UPDATE
   socket.on("save-template", (data) => {
+    if (socket.role !== "admin") return;
+
     const { id, title, message, type } = data;
 
     if (!title || !message) {
-      socket.emit("template-error", {
+      return socket.emit("template-error", {
         message: "Title and message are required",
       });
-      return;
     }
 
-    // Validate max 3 templates for new ones
-    const existingIndex = messageTemplates.findIndex((t) => t.id === id);
+    const index = messageTemplates.findIndex((t) => t.id === id);
 
-    if (existingIndex === -1 && messageTemplates.length >= 3) {
-      socket.emit("template-error", {
-        message: "Maximum 3 templates allowed. Delete one first.",
+    if (index === -1 && messageTemplates.length >= 3) {
+      return socket.emit("template-error", {
+        message: "Maximum 3 templates allowed",
       });
-      return;
     }
 
-    const templateData = {
-      id: id || Date.now(), // Use timestamp as ID if new
+    const template = {
+      id: id || Date.now(),
       title: title.trim(),
       message: message.trim(),
       type: type || "info",
     };
 
-    if (existingIndex >= 0) {
-      // Update existing
-      messageTemplates[existingIndex] = templateData;
-      console.log(`✏️ Template updated: ${templateData.title}`);
+    if (index >= 0) {
+      messageTemplates[index] = template;
     } else {
-      // Create new
-      messageTemplates.push(templateData);
-      console.log(`➕ Template created: ${templateData.title}`);
+      messageTemplates.push(template);
     }
 
-    // Save to file
-    if (saveTemplates(messageTemplates)) {
-      // Broadcast to all connected admins
-      io.emit("templates-update", messageTemplates);
-      socket.emit("template-success", {
-        message: existingIndex >= 0 ? "Template updated" : "Template created",
-        template: templateData,
-      });
-    } else {
-      socket.emit("template-error", {
-        message: "Failed to save template to file",
-      });
-    }
+    saveTemplates(messageTemplates);
+
+    io.emit("templates-update", messageTemplates);
   });
 
-  // DELETE
   socket.on("delete-template", (data) => {
-    const { id } = data;
-    const templateToDelete = messageTemplates.find((t) => t.id === id);
+    if (socket.role !== "admin") return;
 
-    if (!templateToDelete) {
-      socket.emit("template-error", { message: "Template not found" });
-      return;
-    }
+    messageTemplates = messageTemplates.filter((t) => t.id !== data.id);
+    saveTemplates(messageTemplates);
 
-    messageTemplates = messageTemplates.filter((t) => t.id !== id);
-
-    // Reassign IDs to keep sequential (optional - remove if you want to keep IDs)
-    // messageTemplates = messageTemplates.map((t, i) => ({ ...t, id: i + 1 }));
-
-    if (saveTemplates(messageTemplates)) {
-      io.emit("templates-update", messageTemplates);
-      socket.emit("template-success", { message: "Template deleted" });
-      console.log(`🗑️ Template deleted: ${templateToDelete.title}`);
-    } else {
-      socket.emit("template-error", { message: "Failed to save after delete" });
-    }
+    io.emit("templates-update", messageTemplates);
   });
 
   // =========================
-  // SEND TEMPLATE MESSAGE
+  // SEND MESSAGE (ADMIN ONLY)
   // =========================
 
   socket.on("send-template-message", (data) => {
-    const { templateId, pcId, sendToAll } = data;
-    const template = messageTemplates.find((t) => t.id === templateId);
+    if (socket.role !== "admin") return;
 
-    if (!template) {
-      socket.emit("template-error", { message: "Template not found" });
-      return;
-    }
+    const template = messageTemplates.find((t) => t.id === data.templateId);
+
+    if (!template) return;
 
     const targets = [];
 
-    if (sendToAll) {
-      for (const [pid, pcData] of Object.entries(pcs)) {
-        if (pcData.online && pcData.socketId) {
-          targets.push(pcData.socketId);
-        }
+    if (data.sendToAll) {
+      for (const pc of Object.values(pcs)) {
+        if (pc.online) targets.push(pc.socketId);
       }
-    } else if (pcId) {
-      const pcData = pcs[pcId];
-      if (pcData && pcData.online && pcData.socketId) {
-        targets.push(pcData.socketId);
-      }
+    } else if (data.pcId && pcs[data.pcId]) {
+      targets.push(pcs[data.pcId].socketId);
     }
 
-    if (targets.length === 0) {
-      socket.emit("template-error", { message: "No target PCs available" });
-      return;
-    }
-
-    for (const targetSocketId of targets) {
-      io.to(targetSocketId).emit("show-popup", {
+    for (const id of targets) {
+      io.to(id).emit("show-popup", {
         title: template.title,
         message: template.message,
         type: template.type,
-        timestamp: Date.now(),
       });
     }
-
-    socket.emit("template-success", {
-      message: `Sent "${template.title}" to ${targets.length} PC(s)`,
-    });
-
-    console.log(
-      `📨 Template "${template.title}" sent to ${targets.length} PC(s)`,
-    );
   });
 
   // =========================
-  // SEND CUSTOM MESSAGE
+  // CUSTOM MESSAGE (ADMIN ONLY)
   // =========================
 
   socket.on("send-custom-message", (data) => {
-    const { title, message, type, pcId, sendToAll } = data;
-
-    if (!title || !message) {
-      socket.emit("template-error", { message: "Title and message required" });
-      return;
-    }
+    if (socket.role !== "admin") return;
 
     const targets = [];
 
-    if (sendToAll) {
-      for (const [pid, pcData] of Object.entries(pcs)) {
-        if (pcData.online && pcData.socketId) {
-          targets.push(pcData.socketId);
-        }
+    if (data.sendToAll) {
+      for (const pc of Object.values(pcs)) {
+        if (pc.online) targets.push(pc.socketId);
       }
-    } else if (pcId) {
-      const pcData = pcs[pcId];
-      if (pcData && pcData.online && pcData.socketId) {
-        targets.push(pcData.socketId);
-      }
+    } else if (pcs[data.pcId]) {
+      targets.push(pcs[data.pcId].socketId);
     }
 
-    if (targets.length === 0) {
-      socket.emit("template-error", { message: "No target PCs available" });
-      return;
+    for (const id of targets) {
+      io.to(id).emit("show-popup", data);
     }
-
-    for (const targetSocketId of targets) {
-      io.to(targetSocketId).emit("show-popup", {
-        title: title.trim(),
-        message: message.trim(),
-        type: type || "info",
-        timestamp: Date.now(),
-      });
-    }
-
-    socket.emit("template-success", {
-      message: `Custom message sent to ${targets.length} PC(s)`,
-    });
   });
 
   // =========================
-  // EXISTING PC MONITORING
+  // PC STATUS
   // =========================
 
   socket.on("pc-status", (data) => {
+    if (!checkRate(socket)) return;
+
     const { pcId } = data;
-    if (pcs[pcId]) {
-      pcs[pcId] = {
-        ...pcs[pcId],
-        ...data,
-        socketId: socket.id,
-        lastSeen: Date.now(),
-        online: true,
-      };
-    } else {
-      pcs[pcId] = {
-        ...data,
-        socketId: socket.id,
-        lastSeen: Date.now(),
-        online: true,
-      };
-    }
+
+    pcs[pcId] = {
+      ...pcs[pcId],
+      ...data,
+      socketId: socket.id,
+      online: true,
+      lastSeen: Date.now(),
+    };
+
     io.emit("pcs-update", pcs);
   });
 
-  socket.on("client-connected", (data) => {
-    const { pcId } = data;
-    if (pcs[pcId]) {
-      pcs[pcId].socketId = socket.id;
-      pcs[pcId].online = true;
-      pcs[pcId].lastSeen = Date.now();
-    } else {
-      pcs[pcId] = {
-        pcId,
-        socketId: socket.id,
-        online: true,
-        lastSeen: Date.now(),
-        ...data,
-      };
-    }
-    io.emit("pcs-update", pcs);
-  });
+  // =========================
+  // ADMIN COMMANDS (ADMIN ONLY)
+  // =========================
 
-  // Remote Desktop Events
-  socket.on("start-remote-desktop", (data) => {
-    const { pcId } = data;
-    const pcData = pcs[pcId];
-    if (!pcData || !pcData.online) {
-      socket.emit("remote-desktop-error", {
-        message: "PC not found or offline",
-        pcId,
-      });
-      return;
-    }
-    pcs[pcId].adminSocketId = socket.id;
-    pcs[pcId].remoteDesktopActive = true;
-    io.to(pcData.socketId).emit("start-remote-desktop");
-    socket.emit("remote-desktop-started", { pcId });
-  });
+  const adminEvents = {
+    "admin-shutdown-pc": "shutdown-pc",
+    "admin-restart-pc": "restart-pc",
+    "admin-lock-pc": "lock-pc",
+  };
 
-  socket.on("stop-remote-desktop", (data) => {
-    const { pcId } = data;
-    const pcData = pcs[pcId];
-    if (pcData && pcData.socketId) {
-      io.to(pcData.socketId).emit("stop-remote-desktop");
-    }
-    if (pcs[pcId]) {
-      pcs[pcId].remoteDesktopActive = false;
-      pcs[pcId].adminSocketId = null;
-    }
-  });
-
-  socket.on("screen-frame", (data) => {
-    const { pcId } = data;
-    const adminSocketId = pcs[pcId]?.adminSocketId;
-    if (adminSocketId && pcs[pcId]?.remoteDesktopActive) {
-      io.to(adminSocketId).emit("screen-frame", data);
-    }
-  });
-
-  // Preview Events
-  socket.on("start-preview", (data) => {
-    const { pcId } = data;
-    const pcData = pcs[pcId];
-    if (!pcData || !pcData.online) return;
-
-    if (!pcs[pcId].previewAdmins) pcs[pcId].previewAdmins = new Set();
-    pcs[pcId].previewAdmins.add(socket.id);
-    io.to(pcData.socketId).emit("start-preview", {
-      quality: data.quality || 30,
-      fps: data.fps || 5,
-    });
-  });
-
-  socket.on("stop-preview", (data) => {
-    const { pcId } = data;
-    const pcData = pcs[pcId];
-    if (pcData && pcData.previewAdmins) {
-      pcData.previewAdmins.delete(socket.id);
-      if (pcData.previewAdmins.size === 0 && !pcData.remoteDesktopActive) {
-        io.to(pcData.socketId).emit("stop-preview");
-      }
-    }
-  });
-
-  socket.on("preview-frame", (data) => {
-    const { pcId } = data;
-    const pcData = pcs[pcId];
-    if (!pcData || !pcData.previewAdmins) return;
-    for (const adminSocketId of pcData.previewAdmins) {
-      io.to(adminSocketId).emit("preview-frame", data);
-    }
-  });
-
-  // Input Relay
-  const inputEvents = [
-    "remote-mouse-move",
-    "remote-mouse-click",
-    "remote-mouse-down",
-    "remote-mouse-up",
-    "remote-scroll",
-    "remote-key",
-    "remote-type",
-  ];
-  inputEvents.forEach((eventName) => {
-    socket.on(eventName, (data) => {
-      const { pcId } = data;
-      const pcData = pcs[pcId];
-      if (!pcData || !pcData.online || !pcData.remoteDesktopActive) return;
-      const { pcId: _, ...payload } = data;
-      io.to(pcData.socketId).emit(eventName, payload);
-    });
-  });
-
-  // Admin Commands
-  const adminCommands = [
-    { event: "admin-shutdown-pc", target: "shutdown-pc" },
-    { event: "admin-restart-pc", target: "restart-pc" },
-    { event: "admin-lock-pc", target: "lock-pc" },
-  ];
-  adminCommands.forEach(({ event, target }) => {
+  Object.entries(adminEvents).forEach(([event, target]) => {
     socket.on(event, (data) => {
-      const { pcId } = data;
-      const pcData = pcs[pcId];
-      if (!pcData || !pcData.online) {
-        socket.emit("command-error", {
-          message: "PC not found or offline",
-          pcId,
-        });
-        return;
-      }
-      io.to(pcData.socketId).emit(target);
-      socket.emit("command-success", { command: target, pcId });
+      if (socket.role !== "admin") return;
+
+      const pc = pcs[data.pcId];
+      if (!pc || !pc.online) return;
+
+      io.to(pc.socketId).emit(target);
     });
   });
 
-  // Disconnect
+  // =========================
+  // DISCONNECT
+  // =========================
+
   socket.on("disconnect", () => {
-    for (const [pcId, pcData] of Object.entries(pcs)) {
-      if (pcData.socketId === socket.id) {
+    for (const [pcId, pc] of Object.entries(pcs)) {
+      if (pc.socketId === socket.id) {
         pcs[pcId].online = false;
-        pcs[pcId].remoteDesktopActive = false;
-        pcs[pcId].adminSocketId = null;
         pcs[pcId].lastSeen = Date.now();
         io.emit("pcs-update", pcs);
-        break;
-      }
-      if (pcData.adminSocketId === socket.id) {
-        if (pcData.socketId) io.to(pcData.socketId).emit("stop-remote-desktop");
-        pcs[pcId].remoteDesktopActive = false;
-        pcs[pcId].adminSocketId = null;
-      }
-      if (pcData.previewAdmins) {
-        pcData.previewAdmins.delete(socket.id);
-        if (pcData.previewAdmins.size === 0 && !pcData.remoteDesktopActive) {
-          io.to(pcData.socketId).emit("stop-preview");
-        }
       }
     }
   });
 });
 
-const PORT = process.env.PORT || 3002;
-server.listen(PORT, () => {
-  console.log(`✅ Admin server running on port ${PORT}`);
-  console.log(`📁 Dashboard: http://localhost:${PORT}`);
-  console.log(`📝 Templates loaded: ${messageTemplates.length}`);
+// =========================
+// START SERVER
+// ========================= 
+
+server.listen(PORT, "0.0.0.0", () => {
+  // console.log(`✅ Secure server running on port ${PORT}`);
 });
