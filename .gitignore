@@ -1,8 +1,4 @@
 node_modules/.package-lock.json
 /node_modules
 .env
-requirements.txt
-serverb.js
-database/launcher.db
-database/launcher.db-shm
-database/launcher.db-wal
+requirements.txt 
