@@ -3,295 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JLJGAMINGHOUSE — Server Admin</title>
+    <title>JLJGAMINGHOUSE - Server Admin</title>
     <link rel="icon" href="assets/images/favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"> 
+    <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="noise"></div>
 
-    <!-- Title Bar -->
-    <div class="title-bar">
+    <header class="title-bar">
         <div class="title-bar-left">
-            <svg class="logo-mark" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                <line x1="8" y1="21" x2="16" y2="21"/>
-                <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
+            <img class="logo-mark" src="assets/images/favicon-32x32.png" alt="JLJGAMINGHOUSE">
             <span class="brand-name">JLJGAMINGHOUSE</span>
             <span class="server-badge">Server Admin</span>
         </div>
-        <div class="window-controls">
-            <button class="win-btn btn-minimize" title="Minimize"></button>
-            <button class="win-btn btn-maximize" title="Maximize"></button>
-            <button class="win-btn btn-close" title="Close"></button>
-        </div>
-    </div>
+    </header>
 
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" aria-label="Admin navigation">
             <div class="nav-section">
                 <div class="nav-header">Server</div>
-                <div class="nav-item active" onclick="switchTab(this, 'home')">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    Home
+                <button type="button" class="nav-item active" onclick="switchTab(this, 'home')">
+                    <img class="nav-icon" src="assets/icons/home.svg" alt="">
+                    <span>Home</span>
                     <span class="nav-badge" id="pcCountBadge">0</span>
-                </div>
-                <div class="nav-item" onclick="switchTab(this, 'settings')">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Settings
-                </div>
-                <div class="nav-item" onclick="logout()">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Logout
-                </div>
-            </div> 
+                </button>
+                <button type="button" class="nav-item" onclick="switchTab(this, 'settings')">
+                    <img class="nav-icon" src="assets/icons/settings.svg" alt="">
+                    <span>Settings</span>
+                </button>
+                <button type="button" class="nav-item" onclick="logout()">
+                    <img class="nav-icon" src="assets/icons/logout.svg" alt="">
+                    <span>Logout</span>
+                </button>
+            </div>
+
             <div class="nav-section">
                 <div class="nav-header">Messages</div>
-                <div class="nav-item" onclick="switchTab(this, 'templates')">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                    </svg>
-                    Templates
+                <button type="button" class="nav-item" onclick="switchTab(this, 'templates')">
+                    <img class="nav-icon" src="assets/icons/template.svg" alt="">
+                    <span>Templates</span>
                     <span class="nav-badge" id="templateCountBadge">0</span>
-                </div>
-                <div class="nav-item" onclick="switchTab(this, 'send')">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                    Send Message
-                </div>
+                </button>
+                <button type="button" class="nav-item" onclick="switchTab(this, 'send')">
+                    <img class="nav-icon" src="assets/icons/message.svg" alt="">
+                    <span>Send Message</span>
+                </button>
             </div>
-            <div class="nav-section"> 
+
+            <div class="nav-section nav-stats">
                 <div class="nav-header">Stats</div>
-                <div class="nav-item" style="cursor: default;">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    <span id="statsOnline">0 Online</span>
-                </div>
-                <div class="nav-item" style="cursor: default;">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    <span id="statsPreviewing">0 Previewing</span>
-                </div>
-                <div class="nav-item" style="cursor: default;">
-                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span id="statsUptime">Server Up</span>
-                </div>
+                <div class="stat-pill"><span class="status-dot"></span><span id="statsOnline">0 Online</span></div>
+                <div class="stat-pill"><span class="status-dot status-dot-muted"></span><span id="statsPreviewing">0 Previewing</span></div>
+                <div class="stat-pill"><span class="status-dot status-dot-muted"></span><span id="statsUptime">Server Up</span></div>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
-    <!-- HOME TAB -->
-    <div id="tab-home" class="tab-content">
-        <div class="page-header animate-in">
-            <h1 class="page-title">Connected PCs</h1>
-            <div class="header-actions">
-                <span id="connection-status" class="status-badge status-disconnected">Disconnected</span>
-            </div>
-        </div>
-        <div class="toolbar animate-in delay-1">
-            <div class="section-title">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <path d="M3 9h18M9 21V9"/>
-                </svg>
-                PC Monitor
-            </div>
-            <div style="display:flex; gap:15px; align-items:center;">
-                <div class="preview-toggle">
-                    <span>Auto Preview</span>
-                    <div class="toggle-switch active" id="auto-preview-toggle" onclick="toggleAutoPreview()"></div>
+            <section id="tab-home" class="tab-content">
+                <div class="page-header animate-in">
+                    <div>
+                        <p class="eyebrow">Live Monitor</p>
+                        <h1 class="page-title">Connected PCs</h1>
+                    </div>
+                    <div class="header-actions">
+                        <span id="connection-status" class="status-badge status-disconnected">Disconnected</span>
+                    </div>
                 </div>
-                <div class="view-toggle">
-                    <button class="view-btn active" onclick="setView('grid')">⊞ Grid</button>
-                    <button class="view-btn" onclick="setView('compact')">⊟ Compact</button>
-                </div>
-            </div>
-        </div>
-        <div id="pcs-container" class="pcs-grid animate-in delay-2">
-            <div class="empty-state">
-                <div class="empty-state-icon">📭</div>
-                <p>Waiting for PCs to connect...</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- SETTINGS TAB -->
-    <div id="tab-settings" class="tab-content" style="display:none;">
-        <div class="page-header animate-in">
-            <h1 class="page-title">Settings</h1>
-        </div>
-        <div class="animate-in delay-1" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; max-width:600px;">
-            <h3 style="font-size:16px; margin-bottom:16px; color:var(--text-secondary);">Server Configuration</h3>
-            <div class="form-group">
-                <label class="form-label">Server Port</label>
-                <input type="text" value="3002" disabled style="width:100%; padding:10px 14px; background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius); color:var(--text-muted); font-size:13px; font-family:'Poppins',sans-serif;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Preview Quality</label>
-                <select style="width:100%; padding:10px 14px; background:var(--bg-hover); border:1px solid var(--border); border-radius:var(--radius); color:var(--text-primary); font-size:13px; font-family:'Poppins',sans-serif; cursor:pointer;">
-                    <option value="30">Low (30%)</option>
-                    <option value="50" selected>Medium (50%)</option>
-                    <option value="70">High (70%)</option>
-                </select>
-            </div>
-            <button class="btn btn-play btn-full" onclick="showToast('Settings saved', 'success')">Save Changes</button>
-        </div>
-    </div>
-
-    <!-- TEMPLATES TAB -->
-    <div id="tab-templates" class="tab-content" style="display:none;">
-        <div class="page-header animate-in">
-            <h1 class="page-title">Message Templates</h1>
-            <div class="header-actions">
-                <button class="btn btn-play" id="addTemplateBtn" onclick="openEditTemplate()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    Add Template
-                </button>
-            </div>
-        </div>
-        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Manage up to 3 message templates. Max 300 characters each.</p>
-        
-        <!-- Edit Panel (hidden by default) -->
-        <div id="editTemplatePanel" style="display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; max-width: 700px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="font-size: 16px;" id="editPanelTitle">Add Template</h3>
-                <button class="modal-close" onclick="closeEditTemplate()" style="width: 28px; height: 28px; font-size: 12px;">✕</button>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Template Title</label>
-                <input type="text" class="form-input" id="templateTitleInput" placeholder="e.g. Maintenance Notice" maxlength="50">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Message</label>
-                <textarea class="form-input" id="templateMessageInput" rows="3" placeholder="Enter your message..." maxlength="300" style="resize: vertical;"></textarea>
-                <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 4px;">
-                    <span id="templateCharCount">0</span>/300 characters
-                </small>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Type</label>
-                <div style="display: flex; gap: 10px;">
-                    <button class="type-btn active" onclick="selectEditType('info', this)" style="flex: 1; padding: 10px; border-radius: var(--radius); border: 1px solid white; background: var(--bg-hover); color: var(--text-primary); cursor: pointer; font-family: 'Poppins', sans-serif;">ℹ️ Info</button>
-                    <button class="type-btn" onclick="selectEditType('warning', this)" style="flex: 1; padding: 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; font-family: 'Poppins', sans-serif;">⚠️ Warning</button>
-                    <button class="type-btn" onclick="selectEditType('error', this)" style="flex: 1; padding: 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; font-family: 'Poppins', sans-serif;">🚫 Urgent</button>
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-full" style="flex: 1; background: var(--bg-hover); color: var(--text-secondary);" onclick="closeEditTemplate()">Cancel</button>
-                <button class="btn btn-play btn-full" style="flex: 1;" onclick="saveTemplate()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-                    Save Template
-                </button>
-            </div>
-        </div>
-
-        <!-- Templates List -->
-        <div id="templatesList" style="display: flex; flex-direction: column; gap: 12px; max-width: 700px;"></div>
-    </div>
-
-    <!-- SEND MESSAGE TAB -->
-    <div id="tab-send" class="tab-content" style="display:none;">
-        <div class="page-header animate-in">
-            <h1 class="page-title">Send Message</h1>
-        </div>
-        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Send popup messages to client PCs.</p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
-            <!-- Quick Send -->
-            <div>
-                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Quick Send (Templates)</h3>
-                <div id="sendTemplatesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                <p id="noTemplatesMsg" style="color: var(--text-muted); font-size: 12px; margin-top: 12px; display: none;">
-                    No templates. <a href="#" onclick="switchTab(document.querySelector('[onclick*=\'templates\']'), 'templates'); return false;" style="color: var(--text-secondary);">Create one</a>.
-                </p>
-            </div>
-            
-            <!-- Custom Message -->
-            <div>
-                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Custom Message</h3>
-                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px;">
-                    <div class="form-group">
-                        <label class="form-label">Target</label>
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                            <button class="target-btn active" id="targetAllBtn" onclick="setTarget('all')" style="flex: 1;">All PCs</button>
-                            <button class="target-btn" id="targetSelectBtn" onclick="setTarget('select')" style="flex: 1;">Select PC</button>
+                <div class="toolbar animate-in delay-1">
+                    <div class="section-title">
+                        <img class="section-icon" src="assets/icons/computer.svg" alt="">
+                        <span>PC Monitor</span>
+                    </div>
+                    <div class="toolbar-actions">
+                        <label class="preview-toggle">
+                            <span>Auto Preview</span>
+                            <button type="button" class="toggle-switch active" id="auto-preview-toggle" onclick="toggleAutoPreview()" aria-label="Toggle auto preview"></button>
+                        </label>
+                        <div class="view-toggle" aria-label="View mode">
+                            <button type="button" class="view-btn active" onclick="setView('grid', this)">Grid</button>
+                            <button type="button" class="view-btn" onclick="setView('compact', this)">Compact</button>
                         </div>
-                        <div id="pcSelector" style="display: none; max-height: 120px; overflow-y: auto; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px; margin-bottom: 12px;"></div>
+                    </div>
+                </div>
+
+                <div id="pcs-container" class="pcs-grid animate-in delay-2">
+                    <div class="empty-state">
+                        <img class="empty-state-icon-img" src="assets/icons/waiting-connect.svg" alt="">
+                        <p>Waiting for PCs to connect...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-settings" class="tab-content" style="display:none;">
+                <div class="page-header animate-in">
+                    <div>
+                        <p class="eyebrow">Admin</p>
+                        <h1 class="page-title">Settings</h1>
+                    </div>
+                </div>
+                <div class="panel settings-panel animate-in delay-1">
+                    <h2 class="panel-title">Server Configuration</h2>
+                    <div class="form-group">
+                        <label class="form-label">Server Port</label>
+                        <input class="form-input is-disabled" type="text" value="3002" disabled>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-input" id="customTitleInput" placeholder="e.g. Maintenance Notice">
+                        <label class="form-label">Preview Quality</label>
+                        <select class="form-input">
+                            <option value="30">Low (30%)</option>
+                            <option value="50" selected>Medium (50%)</option>
+                            <option value="70">High (70%)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="showToast('Settings saved', 'success')">Save Changes</button>
+                </div>
+            </section>
+
+            <section id="tab-templates" class="tab-content" style="display:none;">
+                <div class="page-header animate-in">
+                    <div>
+                        <p class="eyebrow">Messages</p>
+                        <h1 class="page-title">Message Templates</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="addTemplateBtn" onclick="openEditTemplate()">Add Template</button>
+                    </div>
+                </div>
+                <p class="page-note">Manage up to 3 message templates. Max 300 characters each.</p>
+
+                <div id="editTemplatePanel" class="panel edit-panel" style="display:none;">
+                    <div class="panel-header">
+                        <h2 class="panel-title" id="editPanelTitle">Add Template</h2>
+                        <button class="icon-btn" onclick="closeEditTemplate()" aria-label="Close">Close</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Template Title</label>
+                        <input type="text" class="form-input" id="templateTitleInput" placeholder="e.g. Maintenance Notice" maxlength="50">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Message</label>
-                        <textarea class="form-input" id="customMessageInput" rows="3" placeholder="Your message..." style="resize: vertical;"></textarea>
+                        <textarea class="form-input" id="templateMessageInput" rows="4" placeholder="Enter your message..." maxlength="300"></textarea>
+                        <small class="field-help"><span id="templateCharCount">0</span>/300 characters</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Type</label>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="type-btn active" onclick="selectCustomType('info', this)" style="flex: 1; padding: 8px; border-radius: var(--radius); border: 1px solid white; background: var(--bg-hover); color: var(--text-primary); cursor: pointer; font-size: 12px; font-family: 'Poppins', sans-serif;">ℹ️ Info</button>
-                            <button class="type-btn" onclick="selectCustomType('warning', this)" style="flex: 1; padding: 8px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: 'Poppins', sans-serif;">⚠️ Warning</button>
-                            <button class="type-btn" onclick="selectCustomType('error', this)" style="flex: 1; padding: 8px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: 'Poppins', sans-serif;">🚫 Urgent</button>
+                        <div class="segmented-control">
+                            <button class="type-btn active" onclick="selectEditType('info', this)">Info</button>
+                            <button class="type-btn" onclick="selectEditType('warning', this)">Warning</button>
+                            <button class="type-btn" onclick="selectEditType('error', this)">Urgent</button>
                         </div>
                     </div>
-                    <button class="btn btn-play btn-full" onclick="sendCustomMessage()">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                        </svg>
-                        Send Message
-                    </button>
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="closeEditTemplate()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</main>
+
+                <div id="templatesList" class="template-list"></div>
+            </section>
+
+            <section id="tab-send" class="tab-content" style="display:none;">
+                <div class="page-header animate-in">
+                    <div>
+                        <p class="eyebrow">Broadcast</p>
+                        <h1 class="page-title">Send Message</h1>
+                    </div>
+                </div>
+                <p class="page-note">Send popup messages to client PCs.</p>
+
+                <div class="send-layout">
+                    <div class="send-column">
+                        <h2 class="column-title">Quick Send</h2>
+                        <div id="sendTemplatesList" class="send-template-list"></div>
+                        <p id="noTemplatesMsg" class="empty-note" style="display:none;">
+                            No templates. <a href="#" onclick="switchTab(document.querySelector('[onclick*=\'templates\']'), 'templates'); return false;">Create one</a>.
+                        </p>
+                    </div>
+
+                    <div class="send-column">
+                        <h2 class="column-title">Custom Message</h2>
+                        <div class="panel">
+                            <div class="form-group">
+                                <label class="form-label">Target</label>
+                                <div class="segmented-control">
+                                    <button class="target-btn active" id="targetAllBtn" onclick="setTarget('all')">All PCs</button>
+                                    <button class="target-btn" id="targetSelectBtn" onclick="setTarget('select')">Select PC</button>
+                                </div>
+                                <div id="pcSelector" class="pc-selector" style="display:none;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-input" id="customTitleInput" placeholder="e.g. Maintenance Notice">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message</label>
+                                <textarea class="form-input" id="customMessageInput" rows="4" placeholder="Your message..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Type</label>
+                                <div class="segmented-control">
+                                    <button class="type-btn active" onclick="selectCustomType('info', this)">Info</button>
+                                    <button class="type-btn" onclick="selectCustomType('warning', this)">Warning</button>
+                                    <button class="type-btn" onclick="selectCustomType('error', this)">Urgent</button>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-full" onclick="sendCustomMessage()">Send Message</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <!-- Full Remote Desktop Modal -->
     <div id="remote-modal" class="modal-overlay">
         <div class="modal-header">
             <div class="modal-title">
-                🖥️ Remote Control: <span id="remote-pc-name">-</span>
-                <span style="font-size:12px; color:#4caf50;">● Live</span>
+                <span>Remote Control: <span id="remote-pc-name">-</span></span>
+                <span class="live-badge">Live</span>
             </div>
             <div class="modal-controls">
-                <button class="btn" style="background:var(--bg-elevated); color:var(--text-secondary);" onclick="sendCommand('lock')">🔒 Lock</button>
-                <button class="btn btn-danger" onclick="sendCommand('restart')">🔄 Restart</button>
-                <button class="btn btn-danger" onclick="sendCommand('shutdown')">🔴 Shutdown</button>
-                <button class="btn" style="background:white; color:black;" onclick="stopRemoteDesktop()">⏹ Stop Control</button>
+                <button class="btn btn-secondary" onclick="sendCommand('lock')">Lock</button>
+                <button class="btn btn-danger" onclick="sendCommand('restart')">Restart</button>
+                <button class="btn btn-danger" onclick="sendCommand('shutdown')">Shutdown</button>
+                <button class="btn btn-primary" onclick="stopRemoteDesktop()">Stop Control</button>
             </div>
         </div>
         <div class="screen-container">
-            <div class="connection-info">
-                Resolution: <span id="screen-res">-</span> | Quality: <span id="screen-quality">60%</span>
-            </div>
+            <div class="connection-info">Resolution: <span id="screen-res">-</span> | Quality: <span id="screen-quality">60%</span></div>
             <div class="fps-counter">FPS: <span id="fps-counter">0</span></div>
-            <img id="screen-view" class="screen-view" style="display:none;" />
-            <div id="screen-placeholder" style="color:var(--text-muted);">Click anywhere to start controlling...</div>
+            <img id="screen-view" class="screen-view" style="display:none;" alt="Remote screen">
+            <div id="screen-placeholder" class="screen-placeholder">Click anywhere to start controlling...</div>
         </div>
-    </div> 
+    </div>
 
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/index.js"></script> 
+    <script src="js/index.js"></script>
 </body>
 </html>

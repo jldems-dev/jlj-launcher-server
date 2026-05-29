@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jljgaminghouse - Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="login-body">
+  <div class="noise"></div>
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="/assets/images/favicon-512x512.png" alt="Logo">
+      </div>
+      <div class="login-title">Jljgaminghouse</div>
+      <div class="login-subtitle">Admin Panel Access</div>
+      <div class="input-group">
+        <label>Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          placeholder="Enter admin password"
+          onkeydown="if(event.key==='Enter') login()"
+          autocomplete="current-password"
+        />
+      </div>
+      <button id="loginBtn" class="login-btn" onclick="login()">
+        Login
+      </button>
+      <div class="error" id="error"></div>
+    </div>
+  </div>
+  <script src="js/login.js"></script> 
+</body>
+</html>

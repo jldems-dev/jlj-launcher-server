@@ -3,3 +3,6 @@ node_modules/.package-lock.json
 .env
 requirements.txt
 serverb.js
+database/launcher.db
+database/launcher.db-shm
+database/launcher.db-wal
