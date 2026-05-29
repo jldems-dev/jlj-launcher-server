@@ -13,8 +13,8 @@ const env = {
     .filter(Boolean),
   corsOrigin:
     process.env.NODE_ENV === "production"
-      ? process.env.API_BASE_URL_DEV
-      : process.env.API_BASE_URL_PROD,
+      ? process.env.API_BASE_URL_PROD
+      : process.env.API_BASE_URL_DEV,
 };
 
 module.exports = { env };
